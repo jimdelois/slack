@@ -25,6 +25,13 @@ class PayloadSerializer extends AbstractSerializer
      */
     public function serialize(PayloadInterface $payload)
     {
+
+        $has_attachments = method_exists( $payload, 'getAttachments' );
+        $serializedAttachments = null;
+        if ( $has_attachments ) {
+          $serializedAttachments = $this->serializer->serialize( $payload->getAttachments(), 'json' );
+        }
+
         $serializedPayload = $this->serializer->serialize($payload, 'json');
         if (!$serializedPayload || !is_string($serializedPayload)) {
             throw new \RuntimeException(sprintf(
@@ -33,6 +40,13 @@ class PayloadSerializer extends AbstractSerializer
             ));
         }
 
-        return json_decode($serializedPayload, true);
+        $result = json_decode($serializedPayload, true);
+
+        if ( $has_attachments ) {
+          $result[ 'attachments' ] = $serializedAttachments;
+        }
+
+        return $result;
+
     }
 }
